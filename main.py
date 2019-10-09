@@ -10,6 +10,9 @@ import logging
 # Importing token from config file
 import config
 
+# Importing library to calculate free space
+import shutil
+
 # Importing the Updater object with token for updates from Telegram API
 # Declaring the Dispatcher object to send information to user
 # Creating the bot variable and adding our token
@@ -51,7 +54,10 @@ dispatcher.add_handler(start_handler)
 # Quote Message function to display the quotes
 @send_typing_action
 def freespace_message(update, context):
-    freeSpace = "Nothing"
+    total, used, free = shutil.disk_usage("/")
+
+    freeSpace = 'Total %d GB, Used %d GB, Free %d GB' % \
+                 ((total // (2**30)), (used // (2**30)), (free // (2**30))) 
     context.bot.send_message(chat_id=update.message.chat_id, text=freeSpace)
 
 
