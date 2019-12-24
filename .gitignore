@@ -41,3 +41,4 @@ $RECYCLE.BIN/
 *.lnk
 config.py
 *.pyc
+minu_assistant_bot.service

@@ -9,6 +9,7 @@ from datetime import timedelta
 
 # Logging and requests libraries
 import logging
+from logging.handlers import RotatingFileHandler
 
 # Importing token from config file
 import config
@@ -112,9 +113,13 @@ def main():
     dispatcher = updater.dispatcher
     bot = telegram.Bot(token=config.token)
 
-    # Logging module for debugging
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        level=logging.INFO)
+# Logging module for debugging
+    logging.basicConfig(
+                handlers=[RotatingFileHandler('minu_assistant_bot.log', maxBytes=500000, backupCount=10)],
+                format='%(asctime)s - %(levelname)s - %(lineno)d - %(message)s',
+                level=logging.INFO)
+
+    logging.info("Authorized on account %s" % bot.username)
 
     start_handler = CommandHandler('start', start)
     unknown_handler = MessageHandler(Filters.command, unknown)
