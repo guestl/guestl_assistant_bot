@@ -13,20 +13,22 @@ import logging
 # Importing token from config file
 import config
 
+from functools import wraps
 
-def build_menu(buttons,
-               n_cols,
-               header_buttons=None,
-               footer_buttons=None):
-    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
-    if header_buttons:
-        menu.insert(0, [header_buttons])
-    if footer_buttons:
-        menu.append([footer_buttons])
-    return menu
+
+def restricted(func):
+    @wraps(func)
+    def wrapped(update, context, *args, **kwargs):
+        user_id = update.effective_user.id
+        if user_id not in config.LIST_OF_ADMINS:
+            print("Unauthorized access denied for {}.".format(user_id))
+            return
+        return func(update, context, *args, **kwargs)
+    return wrapped
 
 
 # Displaying the starting message when bot starts
+@restricted
 def start(update, context):
         inline_keyboard = [[InlineKeyboardButton('Место на диске',
                     callback_data='diskspace'),
