@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Python-telegram-bot libraries
 import telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
@@ -31,15 +32,21 @@ def restricted(func):
 # Displaying the starting message when bot starts
 @restricted
 def start(update, context):
-        inline_keyboard = [[InlineKeyboardButton('Место на диске',
-                    callback_data='diskspace'),
-                 InlineKeyboardButton('Аптайм',
-                    callback_data='uptime'),
-                 InlineKeyboardButton('Процессы с ботами',
-                    callback_data='liveprocesses')]]
-        reply_markup = InlineKeyboardMarkup(inline_keyboard)
-        update.message.reply_text(text="Помощник на сервере",
-                             reply_markup=reply_markup)
+    chat_id = update.message.chat_id
+    inline_keyboard = [[InlineKeyboardButton('Место на диске',
+                        callback_data='diskspace'),
+                        InlineKeyboardButton('Аптайм',
+                        callback_data='uptime'),
+                        InlineKeyboardButton('Процессы с ботами',
+                        callback_data='liveprocesses')]]
+    reply_markup = InlineKeyboardMarkup(inline_keyboard)
+    update.message.reply_text(text="Помощник на сервере",
+                              reply_markup=reply_markup)
+
+    for s_job in context.job_queue.jobs():
+        if s_job is None:
+            context.job_queue.run_daily(callback_daily,
+                                        context={'chat_id': chat_id})
 
 
 def get_uptime():
@@ -77,9 +84,11 @@ def get_diskspace():
 
 def get_liveprocesses():
     alive_bots_text = ''
-    for p in psutil.process_iter(attrs=['name', 'status']):
-        if 'bot' in p.info['name']:
-            alive_bots_text = alive_bots_text + 'id: {}, name: {}, status: {} '.format(p.pid,p.info['name'],p.info['status'])
+    for p in psutil.process_iter(attrs=['name', 'status', 'cmdline']):
+        if len(p.info['cmdline']) > 1:
+            if ('bot' in p.info['cmdline'][1]):
+                alive_bots_text = alive_bots_text + \
+                    'id: {}, name: {}, status: {}, cmdline: {} '.format(p.pid,p.info['name'],p.info['status'],p.info['cmdline'][1])
     return alive_bots_text
 
 
@@ -88,6 +97,14 @@ def unknown(update, context):
     context.bot.send_message(chat_id=update.message.chat_id,
                              text="Sorry, I didn't understand the command!\
                              Please try again!")
+
+
+#def callback_daily(context: telegram.ext.CallbackContext):
+def callback_daily(context):
+    m_text = get_diskspace()
+    chat_id = context.job.context['chat_id']
+    context.bot.send_message(chat_id=chat_id,
+                             text=m_text)
 
 
 def button(update, context):
